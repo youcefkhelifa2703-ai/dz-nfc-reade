@@ -9,9 +9,16 @@ workflows:
       - name: Generate Android Platform & NFC Permissions
         script: |
           flutter create --org com.dz.nfcreader --project-name dz_nfc_reader .
-          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradle || true
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/g' android/app/build.gradle || true
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.NFC" />\n    <uses-feature android:name="android.hardware.nfc" android:required="true" />' android/app/src/main/AndroidManifest.xml
+          python3 -c '
+          import pathlib
+          for f in ["android/app/build.gradle", "android/app/build.gradle.kts"]:
+              p = pathlib.Path(f)
+              if p.exists():
+                  p.write_text(p.read_text().replace("flutter.minSdkVersion", "24"))
+          m = pathlib.Path("android/app/src/main/AndroidManifest.xml")
+          perms = "<uses-permission android:name=\"android.permission.CAMERA\" />\n    <uses-permission android:name=\"android.permission.NFC\" />\n    <uses-feature android:name=\"android.hardware.nfc\" android:required=\"true\" />\n    <application"
+          m.write_text(m.read_text().replace("<application", perms, 1))
+          '
       - name: Get Flutter packages
         script: |
           flutter pub get
